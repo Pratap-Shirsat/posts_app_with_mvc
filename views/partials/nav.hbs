@@ -1,0 +1,128 @@
+<script>
+  function updateNavBar() {
+    var isUserLoggedIn = sessionStorage.getItem('auth_token') !== null;
+    if (isUserLoggedIn) {
+      document.getElementById('loginLi').setAttribute('style', 'display:none;');
+      document.getElementById('createPostLi').setAttribute('style', 'display:block;');
+      document.getElementById('profileLi').setAttribute('style', 'display:block;');
+      document.getElementById('searchTextbox').setAttribute('style', 'display:block;');
+      document.getElementById('searchBtn').setAttribute('style', 'display:block;');
+      document.getElementById('passwordResetLi').setAttribute('style', 'display: block;');
+    } else {
+      document.getElementById('loginLi').setAttribute('style', 'display:block;');
+      document.getElementById('createPostLi').setAttribute('style', 'display:none;');
+      document.getElementById('profileLi').setAttribute('style', 'display:none;');
+      document.getElementById('searchTextbox').setAttribute('style', 'display:none;');
+      document.getElementById('searchBtn').setAttribute('style', 'display:none;');
+      document.getElementById('passwordResetLi').setAttribute('style', 'display: none;');
+    }
+  }
+
+  function openResetPasswordForm() {
+    document.getElementById('resetPasswordDiv').setAttribute('style', 'display: block;');
+  }
+  function openAvatarUpload() {
+    document.getElementById('uploadAvatarDiv').setAttribute('style', 'display: block;');
+  }
+  function closeAvatarUpload() {
+    document.getElementById('uploadAvatarDiv').setAttribute('style', 'display: none;');
+  }
+
+  async function searchPoster() {
+    var myHeaders = new Headers();
+    myHeaders.append("Authorization", 'Bearer ' + sessionStorage.getItem('auth_token'));
+
+    var requestOptions = {
+      method: 'GET',
+      headers: myHeaders,
+      redirect: 'follow'
+    };
+
+    await fetch(`/poster/search/${document.getElementById('searchTextbox').value?.trim()}`, requestOptions)
+      .then(response => {
+        if (response.status === 401) {
+          sessionStorage.removeItem('auth_token');
+          window.alert("Token expired. Please login again");
+          throw window.location.href='/';
+        }
+        return response.text()
+      })
+      .then(results => document.getElementById('posterDataView').innerHTML = results)
+      .catch(err => console.log(err));
+    let promises = []; let imageObjectURLs = []
+    var posterDashboard = document.getElementById("posterDashboardDiv");
+    var posters = posterDashboard.getElementsByClassName("card");
+    for (i = 0; i < posters.length; i++) {
+      promises.push({ postId: posters[i].getAttribute('id'), image: fetch(`poster/${posters[i].getAttribute('id')}/poster_image`, requestOptions) });
+    }
+    await Promise.all(promises.map(promise => promise.image.then(response => response.blob())
+      .then(imageUrl => imageObjectURLs.push({ imageSrc: URL.createObjectURL(imageUrl), imageId: `${promise.postId}_imageId` }))
+      .catch(err => console.error(err))));
+    for (i = 0; i < imageObjectURLs.length; i++) {
+      document.getElementById(imageObjectURLs[i].imageId).setAttribute('src', imageObjectURLs[i].imageSrc);
+    }
+  }
+
+  async function uploadAvatar() {
+    var headers = new Headers;
+    headers.append('Authorization', `Bearer ${sessionStorage.getItem('auth_token')}`);
+    var input = document.querySelector('input[type="file"]');
+    var data = new FormData()
+    data.append('avatar', input.files[0])
+
+    var requestOptions = {
+      method: 'POST',
+      headers: headers,
+      body: data,
+      redirect: 'follow',
+    };
+    await fetch('user/upload-avatar', requestOptions)
+      .then(response => {
+        if(response.status===200){
+          window.alert('Successfully uploaded avatar');
+          return window.location='/';
+        }
+        console.log(response);
+        window.alert('Failed to upload avatar');
+      })
+      .catch(err => console.log(err));
+  }
+</script>
+
+<div>
+  <nav class="navbar navbar-expand-sm navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">{{logo}}</a>
+      <div class="collapse navbar-collapse" id="mynavbar">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item" id="profileLi">
+            <a class="nav-link" href="javascript:getUserProfile()">Profile</a>
+          </li>
+          <li class="nav-item" id="passwordResetLi">
+            <a class="nav-link" href="javascript:openResetPasswordForm()">Password Reset</a>
+          </li>
+          <li class="nav-item" id="createPostLi">
+            <a class="nav-link" href="javascript:openPoster()">Create Poster</a>
+          </li>
+          <li class="nav-item" id="loginLi">
+            <a class="nav-link" href="javascript:openUserLogin()">Log In</a>
+          </li>
+        </ul>
+        <form class="d-flex" id="searchFormClass">
+          <input class="form-control me-2" type="text" id="searchTextbox" placeholder="Search by poster name">
+          <button class="btn btn-primary" onclick="searchPoster()" id="searchBtn" type="button">Search</button>
+        </form>
+      </div>
+    </div>
+  </nav>
+  <div>
+    {{> login}}
+  </div>
+  <div>
+    {{> resetPassword}}
+  </div>
+  <div>
+    {{> poster}}
+  </div>
+  <script>updateNavBar()</script>
+</div>

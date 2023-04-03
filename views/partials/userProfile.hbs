@@ -1,0 +1,50 @@
+<div class='modal' id='userProfileModal' style="display:block;">
+  <div class='modal-dialog'>
+    <div class='modal-content'>
+      <div class='modal-header'>
+        <h5 class='modal-title' id='staticBackdropLabel'>User Profile</h5>
+        <button type='button' class='btn-close' data-bs-dismiss='modal' aria-label='Close'
+          onclick='closeUserProfile()'></button>
+      </div>
+      <div class='modal-body'>
+        <div align="center" class='mb-3'>
+          <img height='200px' width='200px' src='' id='profileImageSrc' name='profileImage' class="rounded-pills" />
+        </div>
+        <form id='userProfileForm'>
+          <div class='mb-3'>
+            <label for='username' class='form-label'>Username</label>
+            <input required type='text' class='form-control' name='username' value='{{username}}' readonly
+              id="usernameEdit" />
+          </div>
+          <div class='mb-3'>
+            <label for='firstname' class='form-label'>First Name</label>
+            <input required type='text' class='form-control' name='firstName' value='{{firstName}}' readonly
+              id="firstNameEdit" />
+          </div>
+          <div class='mb-3'>
+            <label for='lastName' class='form-label'>Last Name</label>
+            <input required type='text' class='form-control' name='lastName' value='{{lastName}}' readonly
+              id="lastNameEdit" />
+          </div>
+          <div class='mb-3'>
+            <label for='Email' class='form-label'>Email</label>
+            <input required type='text' class='form-control' name='email' value='{{email}}' readonly id="emailEdit" />
+          </div>
+          <div class='mb-3'>
+            <label for='joinedOn' class='form-label'>Joined On</label>
+            <input required type='text' class='form-control' name='joinedOn' value='{{joinedOn}}' readonly />
+          </div>
+          <button type='button' class='btn btn-primary' style='display: none;' id="updateProfileBtn"
+            onclick="updateUserProfileDetails()">Update details</button>
+          <button type='button' onclick='editProfile()' class='btn btn-secondary' id="editProfileBtn">Edit
+            account</button>
+          <button type='button' onclick='openAvatarUpload()' class='btn btn-secondary' id="uploadProfileImage">Upload
+            profile Image</button>
+        </form>
+      </div>
+      <div>
+        {{> uploadAvatar}}
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,52 @@
+<script>
+  function openUserLogin(){
+  document.getElementById('loginModalPopUp').setAttribute('style','display:block');
+  } 
+  function closeUserLogin(){
+  document.getElementById('loginModalPopUp').setAttribute('style','display:none');
+  }
+</script>
+
+<div class='modal' id='loginModalPopUp' style='display: none;'>
+  <div class='modal-dialog'>
+    <div class='modal-content'>
+      <div class='modal-header'>
+        <h5 class='modal-title' id='staticBackdropLabel'>User Login</h5>
+        <button
+          type='button'
+          class='btn-close'
+          data-bs-dismiss='modal'
+          aria-label='Close'
+          onclick='closeUserLogin()'
+        ></button>
+      </div>
+      <div class='modal-body'>
+        <form id='loginForm' method='post' action='auth/user/login'>
+          <div class='mb-3'>
+            <label for='firstname' class='form-label'>Username</label>
+            <input
+              required
+              type='text'
+              class='form-control'
+              placeholder='username'
+              name='username'
+            />
+          </div>
+          <div class='mb-3'>
+            <label for='password' class='form-label'>Password</label>
+            <input
+              required
+              type='password'
+              class='form-control'
+              placeholder='password'
+              name='password'
+            />
+          </div>
+          <button type='submit' class='btn btn-primary'>Log In!</button>
+          <button type="button" onclick="openUserRegister()" class="btn btn-secondary">Create new account</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {{> register}}
+</div>

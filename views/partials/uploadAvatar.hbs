@@ -1,0 +1,33 @@
+
+<div class='modal' id='uploadAvatarDiv' style='display: none;'>
+  <div class='modal-dialog'>
+    <div class='modal-content'>
+      <div class='modal-header'>
+        <h5 class='modal-title' id='staticBackdropLabel'>Upload a new profile image</h5>
+        <button
+          type='button'
+          class='btn-close'
+          data-bs-dismiss='modal'
+          aria-label='Close'
+          onclick='closeAvatarUpload()'
+        ></button>
+      </div>
+      <div class='modal-body'>
+        <form id='uploadAvatarForm'>
+          <div class='mb-3'>
+            <label for='avatarImage' class='form-label'>Upload image file</label>
+            <input
+              required
+              type='file'
+              class='form-control'
+              name='avatar'
+              id="avatar"
+            />
+          </div>
+          <b style="color: brown;">Note: Image file should be less then 700KB.</b><br/>
+          <button type='submit' class='btn btn-primary' onclick="javascript:uploadAvatar()">Upload</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

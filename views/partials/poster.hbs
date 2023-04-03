@@ -1,0 +1,131 @@
+<div class='modal' id='posterModal' style='display: none;'>
+  <div class='modal-dialog'>
+    <div class='modal-content'>
+      <div class='modal-header'>
+        <h5 class='modal-title' id='staticBackdropLabel'>Create Poster</h5>
+        <button
+          type='button'
+          class='btn-close'
+          data-bs-dismiss='modal'
+          aria-label='Close'
+          onclick='closePoster()'
+        ></button>
+      </div>
+      <div class='modal-body'>
+        <form id='posterForm'>
+          <div class='mb-3'>
+            <label for='posterName' class='form-label'>Poster Name</label>
+            <input              
+              type='text'
+              class='form-control'
+              id='postName'
+              placeholder='post name'
+              name='postName'
+              required
+            />
+          </div>
+          <div class="mb-3" id="displayPosterDiv" style="display: none;">
+          <img width="100%" id="displayPosterImage" src=""/> 
+          </div>
+          <div class='mb-3'>
+            <form id='uploadPosterForm'>
+                <div class='mb-3'>
+                    <label for='posterImage' class='form-label'>Upload image file</label>
+                    <input                    
+                    type='file'
+                    class='form-control'
+                    name='posterImage'
+                    id="posterImage"
+                    required
+                    />
+                </div>
+            </form>
+          </div>
+          <div class='mb-3'>
+            <label for='captions' class='form-label'>Caption</label>
+            <input              
+              type='text'
+              class='form-control'
+              id='caption'
+              placeholder='write some info to describe your post.'
+              name='caption'
+              required
+            />
+          </div>
+          <input type='submit' class='btn btn-primary' value="Post" onclick="javascript:uploadPoster()">
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openPoster(){
+  document.getElementById('posterModal').setAttribute('style','display:block');
+  } 
+  function closePoster(){
+  document.getElementById('posterModal').setAttribute('style','display:none');
+  }
+
+const file = document.querySelector('#posterImage');
+file.addEventListener('change' , function (event) {
+    const imageUrl = URL.createObjectURL(event.target.files[0]);
+    document.getElementById('displayPosterImage').setAttribute('src',imageUrl);
+    document.getElementById('displayPosterDiv').setAttribute('style','display: block;');
+});
+
+async function uploadPoster(){
+    try{
+    var headers = new Headers;
+    headers.append('Authorization',`Bearer ${sessionStorage.getItem('auth_token')}`);
+    headers.append( "Content-Type", "application/json");
+
+    var postData = {
+        postName: document.getElementById('postName').value.trim(),
+        caption: document.getElementById('caption').value.trim()
+    }
+
+    if(postData.caption.length === 0 || postData.postName.length === 0){
+    throw window.alert("Please fill postname or caption field");
+    }
+    var input = document.querySelector('input[type="file"]');
+    var data = new FormData();
+
+    if(input.files[0] === undefined)
+    throw window.alert("Please upload poster image");
+
+    data.append('posterImage', input.files[0]);
+    var requestOptions ={
+        method:'POST',
+        headers: headers,
+        body: JSON.stringify(postData),
+        redirect: 'follow',
+    };
+
+    var post = null;
+    await fetch('poster',requestOptions)
+        .then(response => response.json())
+            .then(result => post=result)
+                .catch(err=>console.log(err));
+    console.log(post);
+
+    var myHeaders = new Headers;
+    myHeaders.append('Authorization',`Bearer ${sessionStorage.getItem('auth_token')}`);
+    var requestOptions ={
+        method:'POST',
+        headers: myHeaders,
+        body: data,
+        redirect: 'follow',
+    };
+    await fetch(`poster/upload_poster/${post.postId}`,requestOptions)
+        .then(response => response.json())
+            .then(result =>console.log(result))
+                .catch(err=>console.log(err));
+
+    window.alert('Successfully posted!!!');
+    window.location.href='/';
+    }catch(err){
+        console.log(err);
+    }
+}
+</script>

@@ -1,0 +1,160 @@
+<html>
+
+<head>
+  {{> header}}
+  <meta charset='utf-8' />
+  <title>Poster Application</title>
+</head>
+
+<body>
+  <div id="navDiv">
+    {{> nav logo="Poster Application" }}
+  </div>
+  {{message}}
+  <div id="userDataDiv"></div>
+  <div id="posterDataView"></div>
+</body>
+
+</html>
+
+<script>
+  function getUserProfile() {
+    var myHeaders = new Headers();
+    myHeaders.append("Authorization", 'Bearer ' + sessionStorage.getItem('auth_token'));
+
+    var requestOptions = {
+      method: 'GET',
+      headers: myHeaders,
+      redirect: 'follow'
+    };
+
+    fetch('/user', requestOptions)
+      .then(response => response.text())
+      .then(result => {
+        if (result.includes('statusCode')) {
+          window.alert('Token expired!!! Please login again');
+          sessionStorage.removeItem('auth_token');
+          window.location.href = '/';
+        }
+        document.getElementById('userDataDiv').innerHTML = result;
+      })
+      .catch(error => console.log('error', error));
+
+    fetch('user/avatar', requestOptions)
+      .then(response => response.blob())
+      .then(imageBlob => {
+        const imageObjectURL = URL.createObjectURL(imageBlob);
+        document.getElementById('profileImageSrc').setAttribute('src', imageObjectURL);
+      })
+      .catch(error => console.log('error', error));
+  }
+
+  function editProfile() {
+    document.getElementById('usernameEdit').removeAttribute('readonly');
+    document.getElementById('firstNameEdit').removeAttribute('readonly');
+    document.getElementById('lastNameEdit').removeAttribute('readonly');
+    document.getElementById('emailEdit').removeAttribute('readonly');
+    document.getElementById('updateProfileBtn').setAttribute('style', 'display:block;');
+    document.getElementById('editProfileBtn').setAttribute('style', 'display:none;');
+    document.getElementById('uploadProfileImage').setAttribute('style', 'display:none;');
+  }
+
+  function closeUserProfile() {
+    document.getElementById('userProfileModal').remove();
+  }
+
+  function updateUserProfileDetails() {
+    const data = new FormData(document.forms.userProfileForm);
+    const updateObject = {
+      'username': data.get('username'),
+      'firstName': data.get('firstName'),
+      'lastName': data.get('lastName'),
+      'email': data.get('email')
+    };
+    var myHeaders = new Headers();
+    myHeaders.append("Authorization", 'Bearer ' + sessionStorage.getItem('auth_token'));
+    myHeaders.append("Content-Type", "application/json");
+
+    var requestOptions = {
+      method: 'PATCH',
+      headers: myHeaders,
+      body: JSON.stringify(updateObject),
+      redirect: 'follow'
+    };
+
+    console.log(updateObject);
+    fetch('/user', requestOptions)
+      .then(response => response.text())
+      .then(result => {
+        console.log(result);
+        if (result.includes('statusCode')) {
+          window.alert('Token expired!!! Please login again');
+          sessionStorage.removeItem('auth_token');
+        } else {
+          window.alert('Sucessfully updated profile!');
+        }
+        window.location.href = '/';
+      })
+  }
+
+  async function likeUpPoster(postId) {
+    var myHeaders = new Headers();
+    myHeaders.append("Authorization", 'Bearer ' + sessionStorage.getItem('auth_token'));
+    var requestOptions = {
+      method: 'PATCH',
+      headers: myHeaders,
+      redirect: 'follow'
+    };
+
+    await fetch(`poster/${postId}/like`, requestOptions)
+      .then(response => {
+        if (response.status === 401) {
+          sessionStorage.removeItem('auth_token');
+          window.alert("Token expired. Please login again");
+          throw window.location.reload();
+        }
+        return response.json()
+      })
+      .then(results => window.alert(results?.message))
+      .catch(err => console.log(err));
+    document.getElementById(`${postId}_likeBtn`).setAttribute('style', 'display:none');
+  }
+
+  async function checkLoginTokenAndGetPosters() {
+    if (sessionStorage.getItem('auth_token')) {
+      var myHeaders = new Headers();
+      myHeaders.append("Authorization", 'Bearer ' + sessionStorage.getItem('auth_token'));
+      var requestOptions = {
+        method: 'GET',
+        headers: myHeaders,
+        redirect: 'follow'
+      };
+
+      await fetch('poster', requestOptions)
+        .then(response => {
+          if (response.status === 401) {
+            sessionStorage.removeItem('auth_token');
+            window.alert("Token expired. Please login again");
+            throw window.location.reload();
+          }
+          return response.text()
+        })
+        .then(results => document.getElementById('posterDataView').innerHTML = results)
+        .catch(err => console.log(err));
+
+      let promises = []; let imageObjectURLs = []
+      var posterDashboard = document.getElementById("posterDashboardDiv");
+      var posters = posterDashboard.getElementsByClassName("card");
+      for (i = 0; i < posters.length; i++) {
+        promises.push({ postId: posters[i].getAttribute('id'), image: fetch(`poster/${posters[i].getAttribute('id')}/poster_image`, requestOptions) });
+      }
+      await Promise.all(promises.map(promise => promise.image.then(response => response.blob())
+        .then(imageUrl => imageObjectURLs.push({ imageSrc: URL.createObjectURL(imageUrl), imageId: `${promise.postId}_imageId` }))
+        .catch(err => console.error(err))));
+      for (i = 0; i < imageObjectURLs.length; i++) {
+        document.getElementById(imageObjectURLs[i].imageId).setAttribute('src', imageObjectURLs[i].imageSrc);
+      }
+    }
+  }
+  checkLoginTokenAndGetPosters();
+</script>
